@@ -61,7 +61,7 @@ actual class LogSharer actual constructor(@Suppress("UNUSED_PARAMETER") platform
 
         val rootVC = windowScene.windows
             .filterIsInstance<platform.UIKit.UIWindow>()
-            .firstOrNull { it.isKeyWindow }
+            .firstOrNull { it.isKeyWindow() }
             ?.rootViewController
 
         rootVC?.presentViewController(activityVC, animated = true, completion = null)
