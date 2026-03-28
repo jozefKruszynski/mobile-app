@@ -64,9 +64,14 @@ jobs:
 
       - name: Package unsigned IPA
         run: |
+          echo "=== Archive contents ==="
+          find $RUNNER_TEMP/MusicAssistant.xcarchive/Products -name "*.app" -maxdepth 4
+
+          APP_PATH=$(find $RUNNER_TEMP/MusicAssistant.xcarchive/Products -name "*.app" -maxdepth 4 | head -1)
+          echo "Found app at: $APP_PATH"
+
           mkdir -p $RUNNER_TEMP/ipa/Payload
-          cp -r "$RUNNER_TEMP/MusicAssistant.xcarchive/Products/Applications/iosApp.app" \
-            $RUNNER_TEMP/ipa/Payload/
+          cp -r "$APP_PATH" $RUNNER_TEMP/ipa/Payload/
           cd $RUNNER_TEMP/ipa
           zip -r MusicAssistant-unsigned.ipa Payload/
 
