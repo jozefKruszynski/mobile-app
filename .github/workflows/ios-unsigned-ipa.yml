@@ -2,18 +2,23 @@ name: iOS Unsigned IPA Build
 
 on:
   push:
-    branches: [main, dev, ios-unsigned-ipa]
-  pull_request:
-    branches: [main, dev]
+    branches:
+      - dev
+      - ios-unsigned-ipa
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-ios-unsigned:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -21,11 +26,14 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
 
       - name: Check Xcode version
         run: xcodebuild -version
+
+      - name: Build KMP iOS framework
+        run: ./gradlew :composeApp:assembleReleaseXCFramework
 
       - name: Build iOS archive (unsigned)
         run: |
@@ -40,9 +48,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             archive
 
-      - name: Debug archive contents
-        run: ls -la "$RUNNER_TEMP/MusicAssistant.xcarchive/Products/Applications/"
-
       - name: Package unsigned IPA
         run: |
           mkdir -p $RUNNER_TEMP/ipa/Payload
@@ -51,9 +56,43 @@ jobs:
           cd $RUNNER_TEMP/ipa
           zip -r MusicAssistant-unsigned.ipa Payload/
 
-      - name: Upload unsigned IPA artifact
-        uses: actions/upload-artifact@v4
+      - name: Get vars
+        id: vars
+        run: echo "timestamp=$(date -u +'%Y.%m.%d.%H%M')" >> $GITHUB_OUTPUT
+
+      - name: Create and push Git tag
+        id: tag
+        run: |
+          TAG=ios-debug-${{ steps.vars.outputs.timestamp }}
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release and Upload IPA
+        uses: softprops/action-gh-release@v2
         with:
-          name: MusicAssistant-iOS-unsigned-${{ github.sha }}
-          path: $RUNNER_TEMP/ipa/MusicAssistant-unsigned.ipa
-          retention-days: 30
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "🍎 iOS Debug Build ${{ steps.vars.outputs.timestamp }}"
+          body: |
+            ## iOS Unsigned IPA Release
+
+            ### What's New
+            ${{ github.event.head_commit.message }}
+
+            ### Important Notes
+            - This is an **unsigned IPA** — it cannot be installed directly
+            - You must re-sign it locally before installing on a device
+            - This is a debug build — not intended for production use
+
+            ### Installation
+            Download the IPA below and re-sign using one of these tools:
+            - **[Sideloadly](https://sideloadly.io/)** — easiest, GUI, free Apple ID works
+            - **[AltStore](https://altstore.io/)** — drag and drop re-signing
+            - **zsign** — command line option
+          files: ${{ runner.temp }}/ipa/MusicAssistant-unsigned.ipa
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
