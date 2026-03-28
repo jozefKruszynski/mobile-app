@@ -2,7 +2,7 @@ name: iOS Unsigned IPA Build
 
 on:
   push:
-    branches: [main, dev, ios-unsigned-ipa]
+    branches: [main, dev]
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build iOS archive (unsigned)
         run: |
-          xcodebuild -workspace iosApp/iosApp.xcworkspace \
+          xcodebuild -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -configuration Release \
             -archivePath $RUNNER_TEMP/MusicAssistant.xcarchive \
@@ -39,6 +39,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             archive
+
+      - name: Debug archive contents
+        run: ls -la "$RUNNER_TEMP/MusicAssistant.xcarchive/Products/Applications/"
 
       - name: Package unsigned IPA
         run: |
