@@ -32,6 +32,11 @@ jobs:
       - name: Check Xcode version
         run: xcodebuild -version
 
+      - name: Symlink JDK for Xcode build phase
+        run: |
+          sudo mkdir -p /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents
+          sudo ln -sfn $JAVA_HOME /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+
       - name: Build iOS archive (unsigned)
         run: |
           xcodebuild -project iosApp/iosApp.xcodeproj \
