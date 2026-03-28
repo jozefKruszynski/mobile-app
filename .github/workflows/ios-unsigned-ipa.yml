@@ -27,11 +27,6 @@ jobs:
       - name: Check Xcode version
         run: xcodebuild -version
 
-      - name: Install CocoaPods dependencies
-        run: |
-          cd iosApp
-          pod install --repo-update
-
       - name: Build iOS archive (unsigned)
         run: |
           xcodebuild -workspace iosApp/iosApp.xcworkspace \
