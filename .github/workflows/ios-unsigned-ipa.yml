@@ -32,9 +32,6 @@ jobs:
       - name: Check Xcode version
         run: xcodebuild -version
 
-      - name: Build KMP iOS framework
-        run: ./gradlew :composeApp:assembleReleaseXCFramework
-
       - name: Build iOS archive (unsigned)
         run: |
           xcodebuild -project iosApp/iosApp.xcodeproj \
