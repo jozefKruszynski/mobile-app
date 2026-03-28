@@ -29,6 +29,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Bump Gradle JVM heap
+        run: |
+          sed -i '' 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=512m/' gradle.properties
+          grep -q 'org.gradle.jvmargs' gradle.properties || echo 'org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=512m' >> gradle.properties
+
       - name: Check Xcode version
         run: xcodebuild -version
 
@@ -36,6 +41,13 @@ jobs:
         run: |
           sudo mkdir -p /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents
           sudo ln -sfn $JAVA_HOME /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+
+      - name: Download WebRTC framework
+        run: |
+          curl -L "https://github.com/webrtc-sdk/Specs/releases/download/125.6422.02/WebRTC.xcframework.zip" \
+            -o /tmp/WebRTC.xcframework.zip
+          mkdir -p iosApp/Frameworks
+          cd iosApp/Frameworks && unzip -q /tmp/WebRTC.xcframework.zip
 
       - name: Build iOS archive (unsigned)
         run: |
