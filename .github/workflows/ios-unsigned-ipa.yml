@@ -2,7 +2,7 @@ name: iOS Unsigned IPA Build
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, ios-unsigned-ipa]
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
